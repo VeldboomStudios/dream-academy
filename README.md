@@ -1,36 +1,103 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Dream Academy
 
-## Getting Started
+AI-ondersteund educatieplatform voor libraries, scholen en universiteiten.
 
-First, run the development server:
+- **Voor docenten:** Live AI-inzichten over je klas — wie loopt vast, wie excelleert, waar zit het patroon
+- **Voor studenten:** Peer-matching — vind een klasgenoot die jou kan helpen, of iemand die jij kan helpen
+- **Voor instellingen:** 8 kant-en-klare cursussen, gym badge systeem, digitaal portfolio, meertalig
+
+## Stack
+
+- Next.js 16 (App Router, TypeScript)
+- Tailwind CSS v4
+- Neon Postgres + Prisma 7
+- Anthropic Claude API (insight engine)
+- JWT session auth (jose)
+- Vercel deployment
+
+## Setup
 
 ```bash
+# 1. Install dependencies
+npm install
+
+# 2. Copy env template
+cp .env.example .env.local
+# Fill in DATABASE_URL (from Neon), ANTHROPIC_API_KEY, AUTH_SECRET
+
+# 3. Push schema to Neon
+npm run db:push
+
+# 4. Seed demo data (8 courses, demo institution, 6 students)
+npm run db:seed
+
+# 5. Run dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit <http://localhost:3000>.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Demo accounts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Teacher:** `teacher@dream.academy` / `teacher123`
+- **Students:** `ahmed@demo.nl`, `layla@demo.nl`, `jamal@demo.nl`, etc. / `student123`
 
-## Learn More
+## How AI insights work
 
-To learn more about Next.js, take a look at the following resources:
+Click **Genereer AI-inzichten** on the teacher dashboard. The system:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Builds a snapshot of the class (students, check-ins, submissions, skill profiles)
+2. Sends it to Claude Sonnet 4.6 with a structured prompt
+3. Parses back 3-6 prioritized insights: stuck students, excelling students, class-wide patterns, pair recommendations
+4. Also runs the peer-matching algorithm: for every struggling student, finds classmates who mastered that skill
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The included demo seed creates realistic scenarios:
 
-## Deploy on Vercel
+- **Ahmed** is struggling with Python loops (and said so in his check-in)
+- **Fatima** is a Python ace
+- **Layla** excels at 3D modeling but struggles with Python
+- **Jamal** is balanced — good printer ops
+- ...
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Generate insights and watch the AI pair them up.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Structure
+
+```
+src/
+  app/
+    page.tsx              # Landing
+    auth/login/           # Login
+    teacher/              # Teacher dashboard
+    student/              # Student dashboard
+    courses/              # Public course catalog
+    api/
+      auth/               # login, logout
+      teacher/            # generate-insights
+      student/            # checkin, peer-match contact
+  lib/
+    db.ts                 # Prisma + Neon adapter
+    auth.ts               # JWT session helpers
+    anthropic.ts          # Claude client
+    insights.ts           # AI insight engine + peer matching
+prisma/
+  schema.prisma           # Full data model
+  seed.ts                 # 8 courses + demo institution
+```
+
+## Next steps
+
+See `PLAN.md` for the full product roadmap (MVP → Phase 2 → Phase 3).
+
+- Multi-tenancy (currently single demo institution)
+- Parent portal
+- Real-time SSE updates on teacher dashboard
+- Mobile app
+- Integration with 3D printer farms (OctoPrint, Bambu Connect)
+- Marketplace for student designs
+- Corporate workshop booking
+
+## Built by
+
+Veldboom Studios · Amsterdam Zuidoost
+Based on the How to Dream Academy curriculum.

@@ -1,0 +1,280 @@
+// Dream Academy — Prisma Schema (Neon Postgres).
+// Local dev connects to the same Neon database via DATABASE_URL in .env.local.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── TENANT ──────────────────────────────────────────
+
+model Institution {
+  id        String   @id @default(cuid())
+  name      String
+  type      String   // LIBRARY, SCHOOL, UNIVERSITY, COMMUNITY_CENTER
+  slug      String   @unique
+  logoUrl   String?
+  language  String   @default("nl")
+  createdAt DateTime @default(now())
+
+  users   User[]
+  classes Class[]
+}
+
+// ─── USERS ───────────────────────────────────────────
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String
+  passwordHash  String?
+  role          String   // STUDENT, TEACHER, ADMIN, PARENT
+  avatarUrl     String?
+  bio           String?
+  language      String   @default("nl")
+  createdAt     DateTime @default(now())
+  lastSeenAt    DateTime @default(now())
+
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id])
+
+  teachingClasses Class[] @relation("TeacherClasses")
+
+  enrollments    Enrollment[]
+  submissions    Submission[]
+  checkins       Checkin[]
+  skillProfile   SkillProfile[]
+  badgesEarned   BadgeEarned[]
+  insightsFor    Insight[]      @relation("InsightForStudent")
+  peerMatchesOut PeerSuggestion[] @relation("FromStudent")
+  peerMatchesIn  PeerSuggestion[] @relation("ToStudent")
+
+  mentorOptIn    Boolean  @default(true)
+}
+
+// ─── CLASSES & COURSES ───────────────────────────────
+
+model Class {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime @default(now())
+
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id])
+
+  teachers User[] @relation("TeacherClasses")
+  enrollments Enrollment[]
+  classCourses ClassCourse[]
+  insights Insight[]
+}
+
+model Course {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  title         String
+  titleNl       String
+  subtitle      String?
+  level         Int
+  durationWeeks Int
+  description   String
+  prerequisites String   @default("[]")  // JSON array of slugs
+  capstoneBrief String?
+  iconEmoji     String?
+  colorHex      String?
+
+  modules      Module[]
+  classCourses ClassCourse[]
+  badges       Badge[]
+}
+
+model ClassCourse {
+  id        String   @id @default(cuid())
+  classId   String
+  courseId  String
+  startDate DateTime?
+  endDate   DateTime?
+  class   Class  @relation(fields: [classId], references: [id])
+  course  Course @relation(fields: [courseId], references: [id])
+  @@unique([classId, courseId])
+}
+
+model Module {
+  id             String   @id @default(cuid())
+  courseId       String
+  order          Int
+  title          String
+  titleNl        String
+  description    String
+  estimatedHours Int
+  course         Course   @relation(fields: [courseId], references: [id])
+  assignments    Assignment[]
+  skills         ModuleSkill[]
+}
+
+model Assignment {
+  id          String   @id @default(cuid())
+  moduleId    String
+  order       Int
+  title       String
+  titleNl     String
+  brief       String
+  type        String   // PROJECT, EXERCISE, REFLECTION, PEER_REVIEW, CAPSTONE
+  isCapstone  Boolean  @default(false)
+  module      Module   @relation(fields: [moduleId], references: [id])
+  submissions Submission[]
+}
+
+// ─── ENROLLMENT ──────────────────────────────────────
+
+model Enrollment {
+  id        String   @id @default(cuid())
+  studentId String
+  classId   String
+  enrolledAt DateTime @default(now())
+  status    String   @default("ACTIVE")  // ACTIVE, PAUSED, COMPLETED, DROPPED
+
+  student User  @relation(fields: [studentId], references: [id])
+  class   Class @relation(fields: [classId], references: [id])
+
+  @@unique([studentId, classId])
+}
+
+// ─── STUDENT WORK ────────────────────────────────────
+
+model Submission {
+  id            String   @id @default(cuid())
+  assignmentId  String
+  studentId     String
+  submittedAt   DateTime @default(now())
+  text          String?
+  fileUrls      String   @default("[]")  // JSON array of URLs
+  status        String   @default("SUBMITTED")  // DRAFT, SUBMITTED, REVIEWED, NEEDS_REVISION, MASTERED
+  feedback      String?
+  feedbackBy    String?
+  feedbackAt    DateTime?
+  score         Int?
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id])
+  student    User       @relation(fields: [studentId], references: [id])
+}
+
+model Checkin {
+  id           String   @id @default(cuid())
+  studentId    String
+  createdAt    DateTime @default(now())
+  mood         Int
+  progressSelf Int
+  blocker      String?
+  needsHelp    Boolean  @default(false)
+  note         String?
+
+  student User @relation(fields: [studentId], references: [id])
+}
+
+// ─── SKILLS & PEER MATCHING ──────────────────────────
+
+model Skill {
+  id       String @id @default(cuid())
+  slug     String @unique
+  name     String
+  nameNl   String
+  category String
+
+  moduleSkills ModuleSkill[]
+  profiles     SkillProfile[]
+}
+
+model ModuleSkill {
+  id       String @id @default(cuid())
+  moduleId String
+  skillId  String
+  weight   Int    @default(1)
+
+  module Module @relation(fields: [moduleId], references: [id])
+  skill  Skill  @relation(fields: [skillId], references: [id])
+
+  @@unique([moduleId, skillId])
+}
+
+model SkillProfile {
+  id          String   @id @default(cuid())
+  studentId   String
+  skillId     String
+  proficiency Int
+  confidence  Int
+  updatedAt   DateTime @updatedAt
+
+  student User  @relation(fields: [studentId], references: [id])
+  skill   Skill @relation(fields: [skillId], references: [id])
+
+  @@unique([studentId, skillId])
+}
+
+model PeerSuggestion {
+  id            String   @id @default(cuid())
+  fromStudentId String
+  toStudentId   String
+  skillSlug     String
+  reason        String
+  score         Int
+  status        String   @default("SUGGESTED")  // SUGGESTED, VIEWED, CONTACTED, DISMISSED, CONNECTED
+  createdAt     DateTime @default(now())
+
+  fromStudent User @relation("FromStudent", fields: [fromStudentId], references: [id])
+  toStudent   User @relation("ToStudent", fields: [toStudentId], references: [id])
+}
+
+// ─── AI INSIGHTS ─────────────────────────────────────
+
+model Insight {
+  id          String   @id @default(cuid())
+  scope       String   // STUDENT, CLASS, INSTITUTION
+  studentId   String?
+  classId     String?
+  priority    String   @default("MEDIUM")  // LOW, MEDIUM, HIGH, URGENT
+  type        String
+  title       String
+  body        String
+  actionable  Boolean  @default(true)
+  dismissedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  student User?  @relation("InsightForStudent", fields: [studentId], references: [id])
+  class   Class? @relation(fields: [classId], references: [id])
+}
+
+// ─── BADGES ──────────────────────────────────────────
+
+model Badge {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  titleNl     String
+  courseId    String?
+  tier        String   @default("BRONZE")  // BRONZE, SILVER, GOLD
+  iconUrl     String?
+  stlUrl      String?
+  description String
+
+  course Course?       @relation(fields: [courseId], references: [id])
+  earned BadgeEarned[]
+}
+
+model BadgeEarned {
+  id        String   @id @default(cuid())
+  badgeId   String
+  studentId String
+  earnedAt  DateTime @default(now())
+  printedAt DateTime?
+
+  badge   Badge @relation(fields: [badgeId], references: [id])
+  student User  @relation(fields: [studentId], references: [id])
+
+  @@unique([badgeId, studentId])
+}
