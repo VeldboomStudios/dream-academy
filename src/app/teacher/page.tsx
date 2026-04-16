@@ -47,7 +47,7 @@ export default async function TeacherDashboard() {
               <span className="numerals">
                 {new Date().toLocaleDateString("nl-NL", { day: "2-digit", month: "short", year: "numeric" })}
               </span>
-              <Hex size={10} className="text-honey" filled />
+              <Hex size={10} className="text-cyan" filled />
               <span>Docent dashboard</span>
             </div>
             <span className="text-label-mono text-muted hidden md:block">
@@ -58,17 +58,17 @@ export default async function TeacherDashboard() {
           {/* Hero greeting */}
           <div className="grid grid-cols-12 gap-6 md:gap-10 mb-16 md:mb-20">
             <div className="col-span-12 lg:col-span-8">
-              <p className="text-label text-honey-deep mb-6">— {greetingNl()}</p>
+              <p className="text-label text-cyan mb-6">— {greetingNl()}</p>
               <h1
-                className="text-display text-paper"
+                className="text-display text-ink-2"
                 style={{ fontSize: "clamp(2.5rem, 6vw, 5.5rem)" }}
               >
                 {teacher.name.split(" ")[0]}
-                <span className="text-honey">.</span>
+                <span className="text-cyan">.</span>
               </h1>
             </div>
             <div className="col-span-12 lg:col-span-4 lg:pl-10 lg:border-l lg:border-rule-2 lg:self-end">
-              <p className="text-paper/80 leading-relaxed">
+              <p className="text-muted leading-relaxed">
                 De co-teacher heeft je klas meegelezen. Hieronder wat ik zag,
                 en wie vandaag aandacht verdient.
               </p>
@@ -105,7 +105,7 @@ export default async function TeacherDashboard() {
                   <form action={`/api/teacher/generate-insights?classId=${klass.id}`} method="POST">
                     <button
                       type="submit"
-                      className="group inline-flex items-center gap-2 bg-paper text-obsidian px-5 py-3 rounded-full text-sm font-medium hover:bg-honey transition-all hover:pr-6"
+                      className="group inline-flex items-center gap-2 bg-cyan text-paper px-5 py-3 text-sm font-semibold uppercase tracking-wider hover:bg-cyan-deep transition-all hover:pr-6"
                     >
                       <Sparkles size={14} />
                       <span>Co-teacher activeren</span>
@@ -159,18 +159,18 @@ export default async function TeacherDashboard() {
                       <li key={e.id}>
                         <Link
                           href={`/teacher/student/${e.student.id}`}
-                          className="group flex items-center gap-4 py-4 -mx-2 px-2 rounded hover:bg-obsidian-2 transition-colors"
+                          className="group flex items-center gap-4 py-4 -mx-2 px-2 rounded hover:bg-paper-2 transition-colors"
                         >
                           <Avatar name={e.student.name} />
                           <div className="flex-1 min-w-0">
-                            <div className="font-medium text-paper truncate">{e.student.name}</div>
+                            <div className="font-medium text-ink-2 truncate">{e.student.name}</div>
                             <div className="text-xs text-muted numerals">
                               {lastSeenText(e.student.lastSeenAt)}
                             </div>
                           </div>
                           <ArrowUpRight
                             size={14}
-                            className="text-muted group-hover:text-paper group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all"
+                            className="text-muted group-hover:text-ink-2 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all"
                           />
                         </Link>
                       </li>
@@ -188,21 +188,21 @@ export default async function TeacherDashboard() {
 
 function DashNav({ name, role }: { name: string; role: string }) {
   return (
-    <header className="sticky top-0 z-50 bg-obsidian/80 backdrop-blur-xl border-b border-rule-2">
+    <header className="sticky top-0 z-50 bg-paper/90 backdrop-blur-xl border-b border-rule-2">
       <div className="mx-auto max-w-[1440px] px-6 md:px-10 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <Hex size={18} className="text-honey" filled />
+          <Hex size={18} className="text-cyan" filled />
           <span className="font-display text-xl tracking-tight">Dream Academy</span>
         </Link>
         <div className="flex items-center gap-6">
           <div className="hidden md:flex flex-col items-end">
-            <span className="text-sm text-paper font-medium">{name}</span>
+            <span className="text-sm text-ink-2 font-medium">{name}</span>
             <span className="text-label text-muted">{role}</span>
           </div>
           <form action="/api/auth/logout" method="POST">
             <button
               type="submit"
-              className="inline-flex items-center gap-2 text-sm text-muted hover:text-paper transition-colors"
+              className="inline-flex items-center gap-2 text-sm text-muted hover:text-ink-2 transition-colors"
             >
               <LogOut size={14} />
               <span className="hidden md:inline">Uitloggen</span>
@@ -218,15 +218,15 @@ function Avatar({ name }: { name: string }) {
   const initial = name.charAt(0);
   return (
     <div className="relative w-10 h-10 shrink-0">
-      <div className="absolute inset-0 bg-obsidian-2 rounded-full" />
+      <div className="absolute inset-0 bg-paper-2 rounded-full" />
       <div
-        className="absolute inset-0 flex items-center justify-center font-display text-lg text-paper"
+        className="absolute inset-0 flex items-center justify-center font-display text-lg text-ink-2"
         style={{
           clipPath:
             "polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)",
         }}
       >
-        <div className="absolute inset-0 bg-honey/20" />
+        <div className="absolute inset-0 bg-cyan/20" />
         <span className="relative">{initial}</span>
       </div>
     </div>
@@ -264,7 +264,7 @@ function InsightCard({
   const Icon = typeIcon;
 
   return (
-    <article className="group relative pl-8 pr-4 py-6 bg-obsidian-2 rounded-lg border border-rule-2 hover:border-ink/30 transition-all">
+    <article className="group relative pl-8 pr-4 py-6 bg-paper-2 rounded-lg border border-rule-2 hover:border-ink/30 transition-all">
       <span
         className="absolute left-4 top-0 bottom-0 w-0.5"
         style={{ background: priorityColor }}
@@ -285,7 +285,7 @@ function InsightCard({
               </span>
             )}
           </div>
-          <p className="text-paper/80 leading-relaxed">{body}</p>
+          <p className="text-muted leading-relaxed">{body}</p>
           <div className="mt-4 flex items-center gap-4 text-label-mono text-muted">
             <span>{priority}</span>
             <span>·</span>

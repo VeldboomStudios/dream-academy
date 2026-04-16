@@ -2,55 +2,62 @@
 
 /*
  * DREAM ACADEMY — DESIGN TOKENS
- * Editorial typographic system with warm earth tones.
- * Inspired by Bijlmer honeycomb heritage and cultural publishing.
+ * Institutional educational system inspired by TU Delft's visual identity:
+ * white-dominant, cyan accent, functional sans-serif typography.
  */
 
 @theme {
-  /* Typography */
-  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  /* Typography — TU Delft style is sans-serif throughout. Fraunces kept
+   * available for rare display moments, but the default display type is
+   * Inter with heavy weight and tight tracking. */
+  --font-display: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-serif: "Fraunces", "Iowan Old Style", Georgia, serif;
 
-  /* Core palette — token NAMES are literal colors.
-   * paper = cream, ink = dark. Pages opt into dark mode by using
-   * bg-obsidian / text-paper as their primary surface + text. */
-  --color-paper: #F5F0E6;          /* warm cream/parchment */
-  --color-paper-2: #EDE6D7;        /* deeper cream for layering */
-  --color-ink: #1A1611;            /* deep warm black (not pure) */
-  --color-ink-2: #2B2620;          /* slightly softer ink */
+  /* Core palette — white paper, black ink. */
+  --color-paper: #FFFFFF;          /* pure white — primary bg */
+  --color-paper-2: #F7F7F7;        /* off-white for lifted sections */
+  --color-paper-3: #EDEDED;        /* card borders, dividers filled */
+  --color-ink: #000000;            /* black — primary text */
+  --color-ink-2: #1A1A1A;          /* near-black for headlines */
 
-  /* Brand accents */
-  --color-honey: #C89F4A;          /* gym badge gold — signature */
-  --color-honey-deep: #E4B866;     /* brighter honey — hover on dark */
-  --color-honey-dark: #A57F2E;     /* darker honey — hover on light */
-  --color-forest: #2F4A3D;         /* deep forest green */
-  --color-forest-2: #8AB097;       /* brighter sage for dark bg */
-  --color-vermillion: #D64526;     /* warm red — used sparingly */
-  --color-terracotta: #C06442;     /* warm terracotta */
+  /* Brand accent — TU Delft cyan */
+  --color-cyan: #00A6D6;           /* TU Delft primary cyan */
+  --color-cyan-deep: #0076A4;      /* darker cyan — hover / active */
+  --color-cyan-light: #B3E5F3;     /* pale cyan — tints, backgrounds */
+  --color-cyan-soft: #E6F6FB;      /* whisper-cyan — highlight fills */
 
-  /* Neutrals — work against both light and dark ground */
-  --color-muted: #A89F8F;          /* warm gray — mid-range both ways */
-  --color-muted-2: #756C5E;        /* dimmer warm gray */
-  --color-rule: #F5F0E614;         /* cream @ ~8% for dark-bg hairlines */
-  --color-rule-2: #F5F0E626;       /* cream @ ~15% for dark-bg rules */
-  --color-rule-ink: #1A161133;     /* ink @ 20% for light-bg rules */
+  /* Secondary accents (used sparingly) */
+  --color-honey: #EAB308;          /* badge gold — only on gym badges */
+  --color-forest: #009B77;         /* Industrial Design green — optional */
+  --color-magenta: #EC6842;        /* AE faculty accent */
 
-  /* Deep surfaces — site default base */
-  --color-obsidian: #120C07;       /* warm black base — primary dark bg */
-  --color-obsidian-2: #1C1510;     /* slightly lifted surface for cards */
-  --color-obsidian-3: #0A0604;     /* deepest, for full-bleed sections */
+  /* Neutrals — TU Delft uses a cool gray scale */
+  --color-muted: #6F6F6F;          /* body meta, labels */
+  --color-muted-2: #9E9E9E;        /* dimmer — secondary meta */
+  --color-muted-3: #BFBFBF;        /* placeholders */
 
-  /* Spacing scale refinement */
+  /* Rules & dividers — light bg defaults */
+  --color-rule: #00000012;         /* ink @ ~7% — subtle hairlines */
+  --color-rule-2: #00000024;       /* ink @ ~14% — visible rules */
+  --color-rule-strong: #00000066;  /* ink @ ~40% — emphatic rules */
+
+  /* Dark surfaces — preserved for the atlas 3D canvas + footer */
+  --color-obsidian: #0B0F14;       /* near-black with a cool blue tint */
+  --color-obsidian-2: #151B23;     /* lifted dark surface */
+  --color-obsidian-3: #05080C;     /* deepest black for full-bleed */
+
+  /* Spacing scale */
   --spacing-gutter: 1.5rem;
   --spacing-margin: 2rem;
 
-  /* Radii — minimal, editorial */
-  --radius-sm: 2px;
-  --radius-md: 4px;
-  --radius-lg: 8px;
-  --radius-xl: 16px;
-  --radius-2xl: 24px;
+  /* Radii — TU Delft uses crisp rectangles; keep these minimal */
+  --radius-sm: 0px;
+  --radius-md: 2px;
+  --radius-lg: 4px;
+  --radius-xl: 8px;
+  --radius-2xl: 12px;
   --radius-pill: 9999px;
 }
 
@@ -66,21 +73,21 @@ html {
 body {
   font-family: var(--font-sans);
   font-feature-settings: "ss01", "cv11";
-  background-color: var(--color-obsidian);
-  color: var(--color-paper);
-  line-height: 1.6;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  line-height: 1.55;
 }
 
 ::selection {
-  background-color: var(--color-honey);
-  color: #15100B; /* always readable on honey, regardless of theme polarity */
+  background-color: var(--color-cyan);
+  color: #FFFFFF;
 }
 
 /* ─── UTILITIES ─────────────────────────────────────── */
 
 @utility font-display {
   font-family: var(--font-display);
-  font-feature-settings: "ss01", "ss02", "ss03", "liga", "dlig";
+  font-feature-settings: "ss01", "ss02", "cv11";
 }
 
 @utility font-sans {
@@ -92,31 +99,43 @@ body {
   font-feature-settings: "tnum", "zero";
 }
 
-/* Editorial display type — tight, characterful */
-@utility text-display {
-  font-family: var(--font-display);
-  font-weight: 400;
-  line-height: 0.92;
-  letter-spacing: -0.035em;
-  font-variation-settings: "SOFT" 30, "WONK" 0, "opsz" 144;
+@utility font-serif {
+  font-family: var(--font-serif);
 }
 
-@utility text-display-italic {
+/* Institutional display type — heavy weight, tight tracking,
+ * compressed line-height. Reads as confident, technical, functional. */
+@utility text-display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 0.94;
+  letter-spacing: -0.035em;
+}
+
+@utility text-display-light {
   font-family: var(--font-display);
   font-weight: 300;
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+}
+
+/* Optional editorial italic (kept for pull-quotes) — uses Fraunces */
+@utility text-display-italic {
+  font-family: var(--font-serif);
+  font-weight: 300;
   font-style: italic;
-  line-height: 0.95;
-  letter-spacing: -0.02em;
+  line-height: 0.98;
+  letter-spacing: -0.01em;
   font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 144;
 }
 
-/* Micro-labels — tracked caps like a museum plaque */
+/* Micro-labels — tracked caps, functional */
 @utility text-label {
   font-family: var(--font-sans);
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.14em;
 }
 
 @utility text-label-mono {
@@ -124,7 +143,7 @@ body {
   font-size: 11px;
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
 }
 
 /* Numerals — data journalism feel */
@@ -134,8 +153,8 @@ body {
   font-variant-numeric: tabular-nums slashed-zero;
 }
 
-/* Hairline rules — editorial. Default to the cream-on-dark hairline since
- * the site is dark by default. Use rule-*-ink when inside a light section. */
+/* Hairline rules — default to light-bg rules since the site is light.
+ * Use rule-*-paper when inside a dark section. */
 @utility rule-t {
   border-top: 1px solid var(--color-rule-2);
 }
@@ -149,25 +168,25 @@ body {
   border-bottom: 1px solid var(--color-rule-2);
 }
 
-@utility rule-t-ink {
-  border-top: 1px solid var(--color-rule-ink);
+@utility rule-t-paper {
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-@utility rule-b-ink {
-  border-bottom: 1px solid var(--color-rule-ink);
+@utility rule-b-paper {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-/* Subtle honeycomb grid background */
-@utility bg-honeycomb {
+/* Subtle dot-grid background */
+@utility bg-dotgrid {
   background-image:
-    radial-gradient(circle at 50% 50%, transparent 0, transparent 15px, var(--color-rule) 15px, var(--color-rule) 16px, transparent 16px);
+    radial-gradient(circle, var(--color-rule) 1px, transparent 1px);
   background-size: 32px 32px;
 }
 
-/* ─── FOCUS ─────────────────────────────────────────── */
+/* ─── FOCUS — cyan outline, TU Delft style ─────────── */
 
 *:focus-visible {
-  outline: 2px solid var(--color-honey);
+  outline: 2px solid var(--color-cyan);
   outline-offset: 3px;
   border-radius: 2px;
 }
@@ -237,7 +256,21 @@ a,
   transform-origin: left;
 }
 
-/* Subtle grain texture (optional, performs well as SVG) */
+/* Cyan underline variant — for primary links */
+.link-cyan {
+  color: var(--color-cyan);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+  transition: color 0.2s ease, text-decoration-thickness 0.2s ease;
+}
+
+.link-cyan:hover {
+  color: var(--color-cyan-deep);
+  text-decoration-thickness: 2px;
+}
+
+/* Subtle grain — barely visible on white */
 .grain {
   position: relative;
 }
@@ -247,7 +280,7 @@ a,
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0.08;
-  mix-blend-mode: overlay;
+  opacity: 0.035;
+  mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' /%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' /%3E%3C/svg%3E");
 }

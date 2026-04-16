@@ -63,12 +63,12 @@ export default async function StudentDashboard() {
               <span className="numerals">
                 {new Date().toLocaleDateString("nl-NL", { day: "2-digit", month: "short", year: "numeric" })}
               </span>
-              <Hex size={10} className="text-honey" filled />
+              <Hex size={10} className="text-cyan" filled />
               <span>Jouw werkplek</span>
             </div>
             <Link
               href="/student/checkin"
-              className="inline-flex items-center gap-2 text-label text-paper hover:text-honey-deep transition-colors"
+              className="inline-flex items-center gap-2 text-label text-ink-2 hover:text-cyan transition-colors"
             >
               <Heart size={12} />
               Check-in
@@ -78,16 +78,16 @@ export default async function StudentDashboard() {
           {/* Hero greeting */}
           <div className="grid grid-cols-12 gap-6 md:gap-10 mb-20 md:mb-24">
             <div className="col-span-12 lg:col-span-8">
-              <p className="text-label text-honey-deep mb-6">— {greetingNl()}</p>
+              <p className="text-label text-cyan mb-6">— {greetingNl()}</p>
               <h1
-                className="text-display text-paper mb-6"
+                className="text-display text-ink-2 mb-6"
                 style={{ fontSize: "clamp(2.5rem, 7vw, 6rem)" }}
               >
                 Hoi, <span className="italic font-light"
                   style={{ fontVariationSettings: '"SOFT" 100, "WONK" 1, "opsz" 144' }}>{firstName}</span>
-                <span className="text-honey">.</span>
+                <span className="text-cyan">.</span>
               </h1>
-              <p className="text-xl text-paper/80 font-display italic font-light leading-tight max-w-2xl"
+              <p className="text-xl text-muted font-display italic font-light leading-tight max-w-2xl"
                 style={{ fontVariationSettings: '"SOFT" 80, "WONK" 0, "opsz" 144' }}>
                 Klaar om vandaag iets te maken?
               </p>
@@ -218,7 +218,7 @@ export default async function StudentDashboard() {
                       <Link
                         key={cc.id}
                         href={`/student/course/${cc.course.slug}`}
-                        className="group inline-flex items-center gap-2 px-4 py-2 rounded-full border border-rule-2 hover:border-honey hover:bg-honey hover:text-obsidian transition-all text-sm"
+                        className="group inline-flex items-center gap-2 px-4 py-2 border border-rule-2 hover:border-cyan hover:bg-cyan hover:text-paper transition-all text-sm"
                       >
                         <span>{cc.course.titleNl}</span>
                         <ArrowUpRight
@@ -233,23 +233,22 @@ export default async function StudentDashboard() {
             </div>
           </div>
 
-          {/* Check-in CTA */}
-          <div className="bg-obsidian text-paper p-10 md:p-14 rounded-lg grain relative overflow-hidden">
+          {/* Check-in CTA — cyan callout */}
+          <div className="bg-cyan text-paper p-10 md:p-14 relative overflow-hidden">
             <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div className="max-w-2xl">
-                <p className="text-label text-honey mb-4">— Check-in</p>
-                <h3 className="font-display text-4xl md:text-5xl leading-[0.95] mb-4">
-                  Hoe gaat het <span className="italic font-light"
-                    style={{ fontVariationSettings: '"SOFT" 100, "WONK" 1, "opsz" 144' }}>écht</span>?
+                <p className="text-label text-paper/90 mb-4">Check-in</p>
+                <h3 className="font-display font-bold text-4xl md:text-5xl leading-[0.95] mb-4 text-paper">
+                  Hoe gaat het écht?
                 </h3>
-                <p className="text-paper/70 leading-relaxed max-w-lg">
+                <p className="text-paper/90 leading-relaxed max-w-lg">
                   Een korte check-in helpt je coach om je beter te begeleiden.
                   Dertig seconden.
                 </p>
               </div>
               <Link
                 href="/student/checkin"
-                className="group inline-flex items-center gap-3 bg-honey text-paper px-7 py-4 rounded-full font-medium transition-all hover:pr-9 w-max"
+                className="group inline-flex items-center gap-3 bg-paper text-cyan-deep px-7 py-4 font-semibold text-sm uppercase tracking-wider transition-all hover:bg-ink-2 hover:text-paper hover:pr-9 w-max"
               >
                 <span>Check-in doen</span>
                 <ArrowRight
@@ -269,21 +268,21 @@ export default async function StudentDashboard() {
 
 function DashNav({ name, role }: { name: string; role: string }) {
   return (
-    <header className="sticky top-0 z-50 bg-obsidian/80 backdrop-blur-xl border-b border-rule-2">
+    <header className="sticky top-0 z-50 bg-paper/90 backdrop-blur-xl border-b border-rule-2">
       <div className="mx-auto max-w-[1440px] px-6 md:px-10 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <Hex size={18} className="text-honey" filled />
+          <Hex size={18} className="text-cyan" filled />
           <span className="font-display text-xl tracking-tight">Dream Academy</span>
         </Link>
         <div className="flex items-center gap-6">
           <div className="hidden md:flex flex-col items-end">
-            <span className="text-sm text-paper font-medium">{name}</span>
+            <span className="text-sm text-ink-2 font-medium">{name}</span>
             <span className="text-label text-muted">{role}</span>
           </div>
           <form action="/api/auth/logout" method="POST">
             <button
               type="submit"
-              className="inline-flex items-center gap-2 text-sm text-muted hover:text-paper transition-colors"
+              className="inline-flex items-center gap-2 text-sm text-muted hover:text-ink-2 transition-colors"
             >
               <LogOut size={14} />
               <span className="hidden md:inline">Uitloggen</span>
@@ -299,7 +298,7 @@ function MiniStat({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex items-baseline justify-between gap-4 rule-b pb-3">
       <span className="text-label text-muted">{label}</span>
-      <span className="numerals font-display text-2xl text-paper">
+      <span className="numerals font-display text-2xl text-ink-2">
         {String(value).padStart(2, "0")}
       </span>
     </div>
@@ -311,7 +310,7 @@ function SkillBar({ name, value, color }: { name: string; value: number; color: 
   return (
     <div>
       <div className="flex items-baseline justify-between mb-2">
-        <span className="text-sm text-paper">{name}</span>
+        <span className="text-sm text-ink-2">{name}</span>
         <span className="numerals text-label text-muted">
           {String(value).padStart(2, "0")} / 100
         </span>
@@ -340,7 +339,7 @@ function PeerHelpCard({
   skill: string;
 }) {
   return (
-    <article className="group p-6 md:p-8 bg-obsidian-2 rounded-lg border border-rule-2 hover:border-ink/30 transition-all">
+    <article className="group p-6 md:p-8 bg-paper-2 rounded-lg border border-rule-2 hover:border-ink/30 transition-all">
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center gap-3">
           <Avatar name={name} />
@@ -351,11 +350,11 @@ function PeerHelpCard({
         </div>
         <span className="text-label-mono text-muted">/ {skill}</span>
       </div>
-      <p className="text-sm text-paper/80 leading-relaxed mb-6 min-h-[3rem]">{reason}</p>
+      <p className="text-sm text-muted leading-relaxed mb-6 min-h-[3rem]">{reason}</p>
       <form action={`/api/student/peer-match/${id}/contact`} method="POST">
         <button
           type="submit"
-          className="group/btn w-full inline-flex items-center justify-between gap-2 px-5 py-3 bg-paper text-obsidian rounded-full text-sm font-medium hover:bg-honey transition-all"
+          className="group/btn w-full inline-flex items-center justify-between gap-2 px-5 py-3 bg-cyan text-paper text-sm font-semibold uppercase tracking-wider hover:bg-cyan-deep transition-all"
         >
           <span className="flex items-center gap-2">
             <HandHelping size={14} />
@@ -373,7 +372,7 @@ function PeerHelpCard({
 
 function PeerGiveCard({ name, skill }: { name: string; skill: string }) {
   return (
-    <article className="p-6 md:p-8 bg-obsidian-2 rounded-lg border border-rule-2 border-dashed">
+    <article className="p-6 md:p-8 bg-paper-2 rounded-lg border border-rule-2 border-dashed">
       <div className="flex items-center gap-3 mb-4">
         <Avatar name={name} />
         <div>
@@ -381,9 +380,9 @@ function PeerGiveCard({ name, skill }: { name: string; skill: string }) {
           <div className="text-label text-muted">Zoekt hulp</div>
         </div>
       </div>
-      <p className="text-sm text-paper/80">
+      <p className="text-sm text-muted">
         Heeft hulp nodig met{" "}
-        <span className="font-mono text-honey-deep">{skill}</span>. Jij bent hierin sterk.
+        <span className="font-mono text-cyan">{skill}</span>. Jij bent hierin sterk.
       </p>
     </article>
   );
@@ -393,7 +392,7 @@ function Avatar({ name }: { name: string }) {
   return (
     <div className="relative w-10 h-10 shrink-0">
       <div
-        className="absolute inset-0 flex items-center justify-center font-display text-lg text-paper bg-honey/25"
+        className="absolute inset-0 flex items-center justify-center font-display text-lg text-ink-2 bg-cyan/20"
         style={{
           clipPath:
             "polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)",

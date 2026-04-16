@@ -18,19 +18,19 @@ import { Hex } from "@/components/Honeycomb";
 import { BODIES, BODY_BY_COURSE_SLUG, JOURNEYS } from "@/components/atlas/graph";
 import { PlanetHero } from "@/components/atlas/PlanetHero";
 
-// Rendered per-request so we read live DB data (progress, enrollment).
-// generateStaticParams would still prerender at build, but that requires
-// a reachable DATABASE_URL at build time — force-dynamic avoids that.
+// Rendered per-request so we read live DB data.
 export const dynamic = "force-dynamic";
 
 export async function generateStaticParams() {
-  // Keep derived slugs available for fallback — the graph doesn't touch the DB.
   return BODIES.filter((b) => !!b.courseSlug).map((b) => ({
     slug: b.courseSlug!,
   }));
 }
 
 type Params = { slug: string };
+
+const CYAN = "#00A6D6";
+const CYAN_DEEP = "#0076A4";
 
 export default async function CourseDetailPage({
   params,
@@ -58,7 +58,6 @@ export default async function CourseDetailPage({
   const body = BODY_BY_COURSE_SLUG.get(slug);
   if (!body) return notFound();
 
-  // Prereq + unlock course data — hydrate from DB for titles
   const prereqSlugs: string[] = safeJsonArray(course.prerequisites);
   const prereqCourses = prereqSlugs.length
     ? await db.course.findMany({
@@ -72,7 +71,6 @@ export default async function CourseDetailPage({
     },
   });
 
-  // Find journeys that include this planet
   const relatedJourneys = JOURNEYS.filter((j) => j.stops.includes(body.id));
 
   const totalHours = course.modules.reduce(
@@ -82,97 +80,72 @@ export default async function CourseDetailPage({
 
   const badge = course.badges.find((b) => b.tier === "BRONZE") ?? course.badges[0];
 
-  const accent = course.colorHex ?? body.color;
-  const glow = body.glowColor ?? accent;
-
   return (
-    <main
-      className="relative min-h-screen"
-      style={{ backgroundColor: "#120C07", color: "#F5F0E6" }}
-    >
-      {/* ═══ HEADER ══════════════════════════════════════ */}
-      <header className="absolute top-0 left-0 right-0 z-30 px-6 md:px-10 py-6 flex items-center justify-between">
+    <main className="relative min-h-screen bg-paper text-ink">
+      {/* ═══ HEADER — floats over the 3D hero, dark-ready ═══════ */}
+      <header className="absolute top-0 left-0 right-0 z-30 px-6 md:px-10 py-5 flex items-center justify-between">
         <Link
           href="/atlas"
-          className="inline-flex items-center gap-2 text-sm transition-opacity"
-          style={{ color: "#F5F0E6", opacity: 0.85 }}
+          className="inline-flex items-center gap-2 text-sm text-paper/85 hover:text-paper transition-colors"
         >
           <ArrowLeft size={14} />
           <span className="link-editorial">Terug naar Atlas</span>
         </Link>
 
         <div className="flex items-center gap-2">
-          <Hex size={18} style={{ color: glow }} filled />
-          <span className="font-display text-xl" style={{ color: "#F5F0E6" }}>
+          <Hex size={18} style={{ color: CYAN }} filled />
+          <span className="font-display font-bold text-lg text-paper">
             Dream Academy
           </span>
         </div>
 
         <Link
           href="/courses"
-          className="inline-flex items-center gap-2 text-sm link-editorial"
-          style={{ color: "#F5F0E6", opacity: 0.85 }}
+          className="inline-flex items-center gap-2 text-sm text-paper/85 hover:text-paper link-editorial"
         >
           Alle cursussen
           <ArrowUpRight size={14} />
         </Link>
       </header>
 
-      {/* ═══ HERO — 3D PLANET + OVERLAY ════════════════════ */}
-      <section className="relative h-[86vh] min-h-[640px] w-full overflow-hidden">
+      {/* ═══ HERO — 3D PLANET + OVERLAY (dark canvas, cyan CTA) ═══ */}
+      <section className="relative h-[86vh] min-h-[640px] w-full overflow-hidden bg-obsidian">
         <div className="absolute inset-0">
           <PlanetHero bodyId={body.id} />
         </div>
 
-        {/* Top gradient for legibility */}
+        {/* Vignette for legibility */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse at center, rgba(10,6,4,0) 40%, rgba(10,6,4,0.55) 75%, rgba(10,6,4,0.85) 100%)",
+              "radial-gradient(ellipse at center, rgba(5,8,12,0) 40%, rgba(5,8,12,0.55) 75%, rgba(5,8,12,0.88) 100%)",
           }}
         />
 
-        {/* Bottom-left: title + meta */}
         <div className="absolute bottom-10 md:bottom-16 left-6 md:left-10 right-6 md:right-10 z-10 pointer-events-none">
           <div className="mx-auto max-w-[1440px] grid grid-cols-12 gap-6 md:gap-10 items-end">
             <div className="col-span-12 lg:col-span-7 pointer-events-auto">
-              <div className="flex items-center gap-3 mb-5 text-label"
-                style={{ color: glow }}>
+              <div className="flex items-center gap-3 mb-5">
                 <span
-                  className="inline-flex items-center justify-center px-2 py-0.5 rounded font-mono text-[10px]"
-                  style={{
-                    background: "#1A1611",
-                    color: glow,
-                    letterSpacing: "0.08em",
-                  }}
+                  className="text-label-mono px-2 py-1"
+                  style={{ backgroundColor: CYAN, color: "#FFFFFF" }}
                 >
                   {romanLevel(course.level)} · {levelName(course.level)}
                 </span>
-                <span className="opacity-80">{course.titleNl}</span>
+                <span className="text-label text-paper/80">
+                  {pad(course.durationWeeks)} weken
+                </span>
               </div>
               <h1
-                className="text-display leading-[0.92]"
-                style={{
-                  fontSize: "clamp(3rem, 9vw, 8rem)",
-                  color: "#F5F0E6",
-                }}
+                className="text-display text-paper leading-[0.92]"
+                style={{ fontSize: "clamp(3rem, 9vw, 8rem)" }}
               >
-                {course.titleNl.split(" ").slice(0, -1).join(" ")}{" "}
-                <span
-                  className="italic font-light"
-                  style={{
-                    color: glow,
-                    fontVariationSettings: '"SOFT" 100, "WONK" 1, "opsz" 144',
-                  }}
-                >
-                  {course.titleNl.split(" ").slice(-1)}
-                </span>
-                <span style={{ color: glow }}>.</span>
+                {course.titleNl}
+                <span style={{ color: CYAN }}>.</span>
               </h1>
               {course.subtitle && (
-                <p className="mt-6 text-lg md:text-xl max-w-xl leading-relaxed"
-                  style={{ color: "#F5F0E6", opacity: 0.86 }}>
+                <p className="mt-6 text-lg md:text-xl max-w-xl text-paper/85 leading-relaxed">
                   {course.subtitle}
                 </p>
               )}
@@ -182,11 +155,7 @@ export default async function CourseDetailPage({
                   href={`/auth/login?redirect=${encodeURIComponent(
                     `/student?enroll=${course.slug}`,
                   )}`}
-                  className="group inline-flex items-center gap-3 px-7 py-4 rounded-full font-medium transition-all hover:pr-9"
-                  style={{
-                    backgroundColor: glow,
-                    color: "#1A1611",
-                  }}
+                  className="group inline-flex items-center gap-3 bg-cyan text-paper px-7 py-4 font-semibold text-sm uppercase tracking-wider transition-all hover:bg-cyan-deep hover:pr-9"
                 >
                   <PlayCircle size={18} />
                   <span>Start het programma</span>
@@ -197,8 +166,7 @@ export default async function CourseDetailPage({
                 </Link>
                 <Link
                   href="/atlas"
-                  className="inline-flex items-center gap-2 text-sm"
-                  style={{ color: "#F5F0E6", opacity: 0.78 }}
+                  className="inline-flex items-center gap-2 text-sm text-paper/80 hover:text-paper"
                 >
                   <Compass size={14} />
                   <span className="link-editorial">Zie op de kaart</span>
@@ -207,21 +175,15 @@ export default async function CourseDetailPage({
             </div>
 
             <div className="col-span-12 lg:col-span-4 lg:col-start-9 pointer-events-auto">
-              <div
-                className="p-6 rounded-xl backdrop-blur-md"
-                style={{
-                  backgroundColor: "rgba(10, 7, 4, 0.55)",
-                  border: "1px solid rgba(245, 240, 230, 0.12)",
-                }}
-              >
-                <MetaRow label="Niveau" value={`${romanLevel(course.level)} · ${levelName(course.level)}`} />
-                <MetaRow label="Duur" value={`${pad(course.durationWeeks)} weken`} />
-                <MetaRow label="Modules" value={pad(course.modules.length)} />
+              <div className="p-6 backdrop-blur-md bg-obsidian/70 border border-white/15">
+                <MetaRowDark label="Niveau" value={`${romanLevel(course.level)} · ${levelName(course.level)}`} />
+                <MetaRowDark label="Duur" value={`${pad(course.durationWeeks)} weken`} />
+                <MetaRowDark label="Modules" value={pad(course.modules.length)} />
                 {totalHours > 0 && (
-                  <MetaRow label="Studielast" value={`±${totalHours} uur`} />
+                  <MetaRowDark label="Studielast" value={`±${totalHours} uur`} />
                 )}
                 {badge && (
-                  <MetaRow
+                  <MetaRowDark
                     label="Badge"
                     value={
                       badge.tier === "GOLD"
@@ -238,52 +200,26 @@ export default async function CourseDetailPage({
         </div>
       </section>
 
-      {/* ═══ OVERVIEW ════════════════════════════════════ */}
-      <section
-        className="px-6 md:px-10 py-20 md:py-28 relative"
-        style={{
-          borderTop: "1px solid rgba(245, 240, 230, 0.08)",
-        }}
-      >
+      {/* ═══ OVERVIEW — light, institutional ══════════════════════ */}
+      <section className="px-6 md:px-10 py-20 md:py-28 bg-paper">
         <div className="mx-auto max-w-[1440px]">
-          <div className="flex items-center justify-between mb-10"
-            style={{ borderBottom: "1px solid rgba(245, 240, 230, 0.1)", paddingBottom: "1.25rem" }}>
-            <p className="text-label" style={{ color: glow }}>
-              — Overzicht
-            </p>
-            <span className="text-label-mono" style={{ color: "#F5F0E6", opacity: 0.5 }}>
-              § 01
-            </span>
-          </div>
+          <SectionHead index="01" label="Overzicht" />
 
           <div className="grid grid-cols-12 gap-6 md:gap-10">
             <div className="col-span-12 lg:col-span-7">
               <p
-                className="font-display leading-[1.08] mb-8"
-                style={{
-                  fontSize: "clamp(1.4rem, 2.6vw, 2.25rem)",
-                  color: "#F5F0E6",
-                }}
+                className="font-display font-light leading-[1.1] mb-8 text-ink-2"
+                style={{ fontSize: "clamp(1.4rem, 2.6vw, 2.25rem)" }}
               >
                 {course.description}
               </p>
               {course.capstoneBrief && (
-                <div
-                  className="p-6 rounded-lg"
-                  style={{
-                    backgroundColor: "rgba(228, 184, 102, 0.08)",
-                    border: "1px solid rgba(228, 184, 102, 0.2)",
-                  }}
-                >
-                  <p className="text-label mb-3 inline-flex items-center gap-2"
-                    style={{ color: glow }}>
+                <div className="p-6 border-l-4 border-cyan bg-cyan-soft">
+                  <p className="text-label text-cyan-deep mb-3 inline-flex items-center gap-2">
                     <Award size={12} /> Capstone
                   </p>
-                  <p className="font-display italic text-lg leading-snug"
-                    style={{
-                      color: "#F5F0E6",
-                      fontVariationSettings: '"SOFT" 100, "WONK" 1, "opsz" 144',
-                    }}>
+                  <p className="font-serif italic text-lg leading-snug text-ink-2"
+                    style={{ fontVariationSettings: '"SOFT" 100, "WONK" 1, "opsz" 144' }}>
                     &ldquo;{course.capstoneBrief}&rdquo;
                   </p>
                 </div>
@@ -291,27 +227,21 @@ export default async function CourseDetailPage({
             </div>
 
             <div className="col-span-12 lg:col-span-4 lg:col-start-9">
-              <div
-                className="pl-6 space-y-6"
-                style={{ borderLeft: "1px solid rgba(245, 240, 230, 0.15)" }}
-              >
+              <div className="pl-6 border-l border-rule-2 space-y-6">
                 <StatRow
                   icon={<Clock size={14} />}
                   label="Doorlooptijd"
                   value={`${course.durationWeeks} weken`}
-                  glow={glow}
                 />
                 <StatRow
                   icon={<Sparkles size={14} />}
                   label="AI-ondersteuning"
                   value="Live feedback"
-                  glow={glow}
                 />
                 <StatRow
                   icon={<HandHelping size={14} />}
                   label="Peer matching"
                   value="Automatisch gekoppeld"
-                  glow={glow}
                 />
               </div>
             </div>
@@ -319,35 +249,17 @@ export default async function CourseDetailPage({
         </div>
       </section>
 
-      {/* ═══ MODULES ═════════════════════════════════════ */}
+      {/* ═══ MODULES ═════════════════════════════════════════════ */}
       {course.modules.length > 0 && (
-        <section
-          className="px-6 md:px-10 py-20 md:py-28"
-          style={{
-            backgroundColor: "rgba(10, 7, 4, 0.4)",
-            borderTop: "1px solid rgba(245, 240, 230, 0.08)",
-            borderBottom: "1px solid rgba(245, 240, 230, 0.08)",
-          }}
-        >
+        <section className="px-6 md:px-10 py-20 md:py-28 bg-paper-2">
           <div className="mx-auto max-w-[1440px]">
-            <div
-              className="flex items-end justify-between mb-12"
-              style={{ borderBottom: "1px solid rgba(245, 240, 230, 0.1)", paddingBottom: "1.25rem" }}
-            >
-              <div>
-                <p className="text-label mb-2" style={{ color: glow }}>
-                  — De route
-                </p>
-                <h2 className="font-display text-4xl md:text-5xl" style={{ color: "#F5F0E6" }}>
-                  {pad(course.modules.length)} modules
-                </h2>
-              </div>
-              <span className="text-label-mono" style={{ color: "#F5F0E6", opacity: 0.5 }}>
-                § 02
-              </span>
-            </div>
+            <SectionHead
+              index="02"
+              label="De route"
+              title={`${pad(course.modules.length)} modules.`}
+            />
 
-            <ol className="space-y-5">
+            <ol className="space-y-4">
               {course.modules.map((m, i) => {
                 const uniqueSkills = Array.from(
                   new Map(m.skills.map((ms) => [ms.skill.slug, ms.skill])).values(),
@@ -356,52 +268,32 @@ export default async function CourseDetailPage({
                 return (
                   <li key={m.id}>
                     <article
-                      className="grid grid-cols-12 gap-4 md:gap-8 p-6 md:p-8 rounded-xl transition-colors"
-                      style={{
-                        backgroundColor: "rgba(245, 240, 230, 0.03)",
-                        border: `1px solid ${
-                          isCapstone
-                            ? "rgba(228, 184, 102, 0.35)"
-                            : "rgba(245, 240, 230, 0.08)"
-                        }`,
-                      }}
+                      className={`grid grid-cols-12 gap-4 md:gap-8 p-6 md:p-8 bg-paper border transition-colors ${
+                        isCapstone ? "border-cyan" : "border-rule-2"
+                      }`}
                     >
                       <div className="col-span-12 md:col-span-2 flex md:flex-col md:items-start items-center md:gap-3 gap-5">
                         <span
-                          className="numerals font-display text-5xl md:text-6xl leading-none"
-                          style={{ color: glow }}
+                          className="numerals font-display font-bold text-5xl md:text-6xl leading-none text-cyan"
                         >
                           {pad(i + 1)}
                         </span>
                         {isCapstone && (
-                          <span
-                            className="text-label-mono px-2 py-0.5 rounded-full text-[10px]"
-                            style={{
-                              color: "#1A1611",
-                              backgroundColor: glow,
-                              letterSpacing: "0.1em",
-                            }}
-                          >
+                          <span className="text-label-mono px-2 py-1 bg-cyan text-paper">
                             Capstone
                           </span>
                         )}
                       </div>
                       <div className="col-span-12 md:col-span-7">
-                        <h3 className="font-display text-2xl md:text-3xl mb-2" style={{ color: "#F5F0E6" }}>
+                        <h3 className="font-display font-bold text-2xl md:text-3xl mb-2 text-ink-2">
                           {m.titleNl}
                         </h3>
-                        <p
-                          className="text-sm leading-relaxed"
-                          style={{ color: "#F5F0E6", opacity: 0.72 }}
-                        >
+                        <p className="text-sm leading-relaxed text-muted">
                           {m.description}
                         </p>
                       </div>
                       <div className="col-span-12 md:col-span-3 flex flex-col gap-3 md:items-end">
-                        <div
-                          className="text-label-mono text-xs"
-                          style={{ color: "#F5F0E6", opacity: 0.55 }}
-                        >
+                        <div className="text-label-mono text-xs text-muted">
                           ±{m.estimatedHours}u
                         </div>
                         {uniqueSkills.length > 0 && (
@@ -409,12 +301,7 @@ export default async function CourseDetailPage({
                             {uniqueSkills.map((s) => (
                               <span
                                 key={s.slug}
-                                className="text-[10px] px-2 py-1 rounded-full"
-                                style={{
-                                  color: "#F5F0E6",
-                                  backgroundColor: "rgba(245, 240, 230, 0.06)",
-                                  border: "1px solid rgba(245, 240, 230, 0.12)",
-                                }}
+                                className="text-[10px] px-2 py-1 bg-paper-2 border border-rule-2 text-ink-2"
                               >
                                 {s.nameNl}
                               </span>
@@ -431,42 +318,24 @@ export default async function CourseDetailPage({
         </section>
       )}
 
-      {/* ═══ PROGRESSION ═════════════════════════════════ */}
+      {/* ═══ PROGRESSION ═════════════════════════════════════════ */}
       {(prereqCourses.length > 0 || unlockCourses.length > 0) && (
-        <section className="px-6 md:px-10 py-20 md:py-28">
+        <section className="px-6 md:px-10 py-20 md:py-28 bg-paper">
           <div className="mx-auto max-w-[1440px]">
-            <div
-              className="flex items-end justify-between mb-12"
-              style={{ borderBottom: "1px solid rgba(245, 240, 230, 0.1)", paddingBottom: "1.25rem" }}
-            >
-              <div>
-                <p className="text-label mb-2" style={{ color: glow }}>
-                  — Positie in de baan
-                </p>
-                <h2 className="font-display text-4xl md:text-5xl" style={{ color: "#F5F0E6" }}>
-                  Voor en na.
-                </h2>
-              </div>
-              <span className="text-label-mono" style={{ color: "#F5F0E6", opacity: 0.5 }}>
-                § 03
-              </span>
-            </div>
+            <SectionHead
+              index="03"
+              label="Positie in de baan"
+              title="Voor en na."
+            />
 
             <div className="grid grid-cols-12 gap-6 md:gap-10">
               <div className="col-span-12 md:col-span-6">
-                <p className="text-label mb-5 inline-flex items-center gap-2"
-                  style={{ color: "#F5F0E6", opacity: 0.7 }}>
+                <p className="text-label text-muted mb-5 inline-flex items-center gap-2">
                   <Lock size={12} /> Voorkennis
                 </p>
                 {prereqCourses.length === 0 ? (
-                  <p
-                    className="font-display italic text-xl"
-                    style={{
-                      color: "#F5F0E6",
-                      opacity: 0.55,
-                      fontVariationSettings: '"SOFT" 100, "WONK" 1, "opsz" 144',
-                    }}
-                  >
+                  <p className="font-serif italic text-xl text-muted"
+                    style={{ fontVariationSettings: '"SOFT" 100, "WONK" 1, "opsz" 144' }}>
                     Geen voorkennis nodig — deze planeet staat aan de start.
                   </p>
                 ) : (
@@ -477,7 +346,6 @@ export default async function CourseDetailPage({
                         title={p.titleNl}
                         subtitle={p.subtitle}
                         slug={p.slug}
-                        color={p.colorHex ?? "#F5F0E6"}
                       />
                     ))}
                   </ul>
@@ -485,18 +353,12 @@ export default async function CourseDetailPage({
               </div>
 
               <div className="col-span-12 md:col-span-6">
-                <p className="text-label mb-5 inline-flex items-center gap-2" style={{ color: glow }}>
+                <p className="text-label text-cyan mb-5 inline-flex items-center gap-2">
                   <Unlock size={12} /> Ontgrendelt
                 </p>
                 {unlockCourses.length === 0 ? (
-                  <p
-                    className="font-display italic text-xl"
-                    style={{
-                      color: "#F5F0E6",
-                      opacity: 0.55,
-                      fontVariationSettings: '"SOFT" 100, "WONK" 1, "opsz" 144',
-                    }}
-                  >
+                  <p className="font-serif italic text-xl text-muted"
+                    style={{ fontVariationSettings: '"SOFT" 100, "WONK" 1, "opsz" 144' }}>
                     Eindstation — De Meester.
                   </p>
                 ) : (
@@ -507,7 +369,6 @@ export default async function CourseDetailPage({
                         title={u.titleNl}
                         subtitle={u.subtitle}
                         slug={u.slug}
-                        color={u.colorHex ?? glow}
                         highlight
                       />
                     ))}
@@ -519,54 +380,31 @@ export default async function CourseDetailPage({
         </section>
       )}
 
-      {/* ═══ JOURNEYS ════════════════════════════════════ */}
+      {/* ═══ JOURNEYS ════════════════════════════════════════════ */}
       {relatedJourneys.length > 0 && (
-        <section
-          className="px-6 md:px-10 py-20 md:py-28"
-          style={{
-            backgroundColor: "rgba(10, 7, 4, 0.4)",
-            borderTop: "1px solid rgba(245, 240, 230, 0.08)",
-          }}
-        >
+        <section className="px-6 md:px-10 py-20 md:py-28 bg-paper-2">
           <div className="mx-auto max-w-[1440px]">
-            <div
-              className="flex items-end justify-between mb-12"
-              style={{ borderBottom: "1px solid rgba(245, 240, 230, 0.1)", paddingBottom: "1.25rem" }}
-            >
-              <div>
-                <p className="text-label mb-2" style={{ color: glow }}>
-                  — Reizen die hier langskomen
-                </p>
-                <h2 className="font-display text-4xl md:text-5xl" style={{ color: "#F5F0E6" }}>
-                  {pad(relatedJourneys.length)} pad{relatedJourneys.length === 1 ? "" : "en"}.
-                </h2>
-              </div>
-              <span className="text-label-mono" style={{ color: "#F5F0E6", opacity: 0.5 }}>
-                § 04
-              </span>
-            </div>
+            <SectionHead
+              index="04"
+              label="Reizen die hier langskomen"
+              title={`${pad(relatedJourneys.length)} pad${relatedJourneys.length === 1 ? "" : "en"}.`}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
               {relatedJourneys.map((j) => (
                 <Link
                   key={j.id}
                   href="/atlas"
-                  className="group p-6 md:p-7 rounded-xl transition-all"
-                  style={{
-                    backgroundColor: "rgba(245, 240, 230, 0.04)",
-                    border: "1px solid rgba(245, 240, 230, 0.08)",
-                  }}
+                  className="group p-7 bg-paper border border-rule-2 transition-all hover:border-cyan hover:-translate-y-1 duration-300"
                 >
-                  <div className="flex items-center gap-2 mb-4" style={{ color: glow }}>
+                  <div className="flex items-center gap-2 mb-4 text-cyan">
                     <Compass size={14} />
                     <span className="text-label">{j.subtitle}</span>
                   </div>
-                  <h3 className="font-display text-2xl md:text-3xl mb-5 leading-tight"
-                    style={{ color: "#F5F0E6" }}>
+                  <h3 className="font-display font-bold text-2xl md:text-3xl mb-5 leading-tight text-ink-2">
                     {j.title}
                   </h3>
-                  <p className="text-sm leading-relaxed mb-6"
-                    style={{ color: "#F5F0E6", opacity: 0.7 }}>
+                  <p className="text-sm leading-relaxed mb-6 text-muted">
                     {j.description}
                   </p>
                   <div className="flex flex-wrap items-center gap-2">
@@ -579,24 +417,18 @@ export default async function CourseDetailPage({
                           className="inline-flex items-center gap-1.5 text-xs"
                         >
                           <span
-                            className="px-2 py-1 rounded-full"
-                            style={{
-                              color: isThis ? "#1A1611" : "#F5F0E6",
-                              backgroundColor: isThis
-                                ? glow
-                                : "rgba(245, 240, 230, 0.06)",
-                              border: isThis
-                                ? "none"
-                                : "1px solid rgba(245, 240, 230, 0.12)",
-                              fontWeight: isThis ? 600 : 400,
-                            }}
+                            className={`px-2 py-1 ${
+                              isThis
+                                ? "bg-cyan text-paper font-semibold"
+                                : "bg-paper-2 text-ink-2 border border-rule-2"
+                            }`}
                           >
                             {stop?.label ?? stopId}
                           </span>
                           {idx < j.stops.length - 1 && (
                             <ArrowRight
                               size={10}
-                              style={{ color: "#F5F0E6", opacity: 0.4 }}
+                              className="text-muted"
                             />
                           )}
                         </span>
@@ -610,37 +442,21 @@ export default async function CourseDetailPage({
         </section>
       )}
 
-      {/* ═══ FINAL CTA ═══════════════════════════════════ */}
-      <section className="px-6 md:px-10 py-24 md:py-36">
+      {/* ═══ FINAL CTA ═══════════════════════════════════════════ */}
+      <section className="px-6 md:px-10 py-24 md:py-36 bg-paper">
         <div className="mx-auto max-w-[1100px] text-center">
           <Hex
             size={22}
-            style={{ color: glow, margin: "0 auto 1.5rem" }}
+            style={{ color: CYAN, margin: "0 auto 1.5rem" }}
             filled
           />
           <h2
-            className="font-display leading-[0.95] mb-8"
-            style={{
-              fontSize: "clamp(3rem, 7vw, 6rem)",
-              color: "#F5F0E6",
-            }}
+            className="font-display text-ink-2 leading-[0.95] mb-8"
+            style={{ fontSize: "clamp(2.75rem, 6.5vw, 5.5rem)" }}
           >
-            Klaar om te{" "}
-            <span
-              className="italic font-light"
-              style={{
-                color: glow,
-                fontVariationSettings: '"SOFT" 100, "WONK" 1, "opsz" 144',
-              }}
-            >
-              beginnen
-            </span>
-            ?
+            Klaar om te <span className="text-cyan">beginnen</span>?
           </h2>
-          <p
-            className="text-lg md:text-xl max-w-xl mx-auto mb-10 leading-relaxed"
-            style={{ color: "#F5F0E6", opacity: 0.78 }}
-          >
+          <p className="text-lg md:text-xl max-w-xl mx-auto mb-10 leading-relaxed text-muted">
             Eén klik schrijft je in voor {course.titleNl}. Je komt terecht in je
             eigen werkplek met je eerste check-in klaar.
           </p>
@@ -649,11 +465,7 @@ export default async function CourseDetailPage({
               href={`/auth/login?redirect=${encodeURIComponent(
                 `/student?enroll=${course.slug}`,
               )}`}
-              className="group inline-flex items-center gap-3 px-7 py-4 rounded-full font-medium transition-all hover:pr-9"
-              style={{
-                backgroundColor: glow,
-                color: "#1A1611",
-              }}
+              className="group inline-flex items-center gap-3 bg-cyan text-paper px-7 py-4 font-semibold text-sm uppercase tracking-wider transition-all hover:bg-cyan-deep hover:pr-9"
             >
               <PlayCircle size={18} />
               <span>Start het programma</span>
@@ -664,8 +476,7 @@ export default async function CourseDetailPage({
             </Link>
             <Link
               href="/courses"
-              className="link-editorial font-medium"
-              style={{ color: "#F5F0E6" }}
+              className="link-cyan text-sm font-medium"
             >
               Verken andere planeten
             </Link>
@@ -678,19 +489,35 @@ export default async function CourseDetailPage({
 
 /* ─── SMALL PIECES ─────────────────────────────────── */
 
-function MetaRow({ label, value }: { label: string; value: string }) {
+function SectionHead({
+  index,
+  label,
+  title,
+}: {
+  index: string;
+  label: string;
+  title?: string;
+}) {
   return (
-    <div
-      className="flex items-baseline justify-between py-2.5"
-      style={{ borderBottom: "1px solid rgba(245, 240, 230, 0.08)" }}
-    >
-      <span className="text-label" style={{ color: "#F5F0E6", opacity: 0.6 }}>
-        {label}
-      </span>
-      <span
-        className="font-display text-sm"
-        style={{ color: "#F5F0E6" }}
-      >
+    <div className="flex items-end justify-between rule-b pb-5 mb-12">
+      <div>
+        <p className="text-label text-cyan mb-2">{label}</p>
+        {title && (
+          <h2 className="font-display font-bold text-3xl md:text-4xl text-ink-2">
+            {title}
+          </h2>
+        )}
+      </div>
+      <span className="text-label-mono text-muted">§ {index}</span>
+    </div>
+  );
+}
+
+function MetaRowDark({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between py-2.5 border-b border-white/10 last:border-b-0">
+      <span className="text-label text-paper/70">{label}</span>
+      <span className="font-display font-semibold text-sm text-paper">
         {value}
       </span>
     </div>
@@ -701,32 +528,19 @@ function StatRow({
   icon,
   label,
   value,
-  glow,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
-  glow: string;
 }) {
   return (
     <div className="flex items-start gap-4">
-      <span
-        className="inline-flex items-center justify-center w-8 h-8 rounded-full shrink-0"
-        style={{
-          backgroundColor: "rgba(245, 240, 230, 0.06)",
-          color: glow,
-          border: "1px solid rgba(245, 240, 230, 0.12)",
-        }}
-      >
+      <span className="inline-flex items-center justify-center w-9 h-9 shrink-0 bg-cyan text-paper">
         {icon}
       </span>
       <div>
-        <p className="text-label mb-1" style={{ color: "#F5F0E6", opacity: 0.55 }}>
-          {label}
-        </p>
-        <p className="font-display text-base" style={{ color: "#F5F0E6" }}>
-          {value}
-        </p>
+        <p className="text-label text-muted mb-1">{label}</p>
+        <p className="font-display font-semibold text-base text-ink-2">{value}</p>
       </div>
     </div>
   );
@@ -736,55 +550,42 @@ function CourseChip({
   title,
   subtitle,
   slug,
-  color,
   highlight,
 }: {
   title: string;
   subtitle: string | null;
   slug: string;
-  color: string;
   highlight?: boolean;
 }) {
   return (
     <li>
       <Link
         href={`/courses/${slug}`}
-        className="group flex items-center gap-4 p-4 rounded-lg transition-all"
-        style={{
-          backgroundColor: highlight
-            ? "rgba(228, 184, 102, 0.08)"
-            : "rgba(245, 240, 230, 0.04)",
-          border: `1px solid ${
-            highlight
-              ? "rgba(228, 184, 102, 0.3)"
-              : "rgba(245, 240, 230, 0.1)"
-          }`,
-        }}
+        className={`group flex items-center gap-4 p-4 transition-all ${
+          highlight
+            ? "bg-cyan-soft border border-cyan hover:bg-cyan hover:text-paper"
+            : "bg-paper border border-rule-2 hover:border-ink"
+        }`}
       >
         <span
           className="w-2.5 h-2.5 rounded-full shrink-0"
           style={{
-            backgroundColor: color,
-            boxShadow: highlight ? `0 0 12px ${color}` : "none",
+            backgroundColor: highlight ? CYAN_DEEP : "#9E9E9E",
           }}
         />
         <div className="flex-1 min-w-0">
-          <p className="font-display text-lg leading-tight" style={{ color: "#F5F0E6" }}>
+          <p className="font-display font-semibold text-lg leading-tight">
             {title}
           </p>
           {subtitle && (
-            <p
-              className="text-xs mt-1 truncate"
-              style={{ color: "#F5F0E6", opacity: 0.6 }}
-            >
+            <p className={`text-xs mt-1 truncate ${highlight ? "opacity-80 group-hover:text-paper" : "text-muted"}`}>
               {subtitle}
             </p>
           )}
         </div>
         <ArrowRight
           size={14}
-          className="transition-transform group-hover:translate-x-1"
-          style={{ color: "#F5F0E6", opacity: 0.6 }}
+          className="transition-transform group-hover:translate-x-1 opacity-60"
         />
       </Link>
     </li>

@@ -38,7 +38,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       lang="nl"
       className={`${fraunces.variable} ${inter.variable} ${jetbrains.variable}`}
     >
-      <body className="min-h-screen bg-obsidian text-paper font-sans antialiased">{children}</body>
+      <body className="min-h-screen bg-paper text-ink font-sans antialiased">{children}</body>
     </html>
   );
 }
