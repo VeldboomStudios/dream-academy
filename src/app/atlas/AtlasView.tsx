@@ -37,7 +37,15 @@ export default function AtlasView({
   const [navOpen, setNavOpen] = useState(false);
   const [activeJourney, setActiveJourney] = useState<JourneyPath | null>(null);
   const [tourStep, setTourStep] = useState(0);
+  // Mobile bottom-sheet: collapsed by default so planets are visible
+  const [sheetExpanded, setSheetExpanded] = useState(false);
   const tourTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Auto-expand sheet when a planet is selected (so the user sees the details),
+  // auto-collapse when deselecting.
+  useEffect(() => {
+    setSheetExpanded(!!selectedId);
+  }, [selectedId]);
 
   const selected = selectedId ? BODY_BY_ID.get(selectedId) ?? null : null;
   const Icon = selected?.icon;
@@ -88,19 +96,20 @@ export default function AtlasView({
       style={{ backgroundColor: "#120C07", color: "#F5F0E6" }}
     >
       {/* ─── HEADER ───────────────────────────────────── */}
-      <header className="absolute top-0 left-0 right-0 z-30 px-6 md:px-10 py-6 flex items-center justify-between">
+      <header className="absolute top-0 left-0 right-0 z-30 px-4 md:px-10 py-4 md:py-6 flex items-center justify-between">
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-sm hover:opacity-100 transition-opacity"
           style={{ color: "#F5F0E6", opacity: 0.85 }}
         >
           <ArrowLeft size={14} />
-          <span className="link-editorial">Terug naar 2D</span>
+          <span className="link-editorial hidden sm:inline">Terug naar 2D</span>
+          <span className="link-editorial sm:hidden">Terug</span>
         </Link>
 
         <div className="flex items-center gap-2">
-          <Hex size={18} className="text-honey" filled />
-          <span className="font-display text-xl" style={{ color: "#F5F0E6" }}>
+          <Hex size={16} className="text-honey" filled />
+          <span className="font-display text-base md:text-xl" style={{ color: "#F5F0E6" }}>
             Atlas
           </span>
         </div>
@@ -111,10 +120,11 @@ export default function AtlasView({
           style={{
             color: "#F5F0E6",
             backgroundColor: navOpen
-              ? "rgba(228, 184, 102, 0.15)"
+              ? "rgba(0, 166, 214, 0.2)"
               : "rgba(10, 7, 4, 0.5)",
             border: "1px solid rgba(245, 240, 230, 0.12)",
           }}
+          aria-label="Open navigatie"
         >
           <Menu size={14} />
           <span className="hidden md:inline">Alle pagina&apos;s</span>
@@ -141,15 +151,16 @@ export default function AtlasView({
       {/* ─── INTRO PANEL (when idle, no tour) ─────────── */}
       {!selectedId && !activeJourney && (
         <>
+          {/* DESKTOP: top-left floating card */}
           <div
-            className="absolute top-24 left-6 md:left-10 max-w-sm z-10 pointer-events-auto p-6 rounded-xl backdrop-blur-sm"
+            className="hidden md:block absolute top-24 left-10 max-w-sm z-10 pointer-events-auto p-6 rounded-xl backdrop-blur-sm"
             style={{
               backgroundColor: "rgba(10, 7, 4, 0.6)",
               border: "1px solid rgba(245, 240, 230, 0.08)",
             }}
           >
-            <p className="text-label mb-4" style={{ color: "#E4B866" }}>
-              — Zonnestelsel
+            <p className="text-label mb-4" style={{ color: "#00A6D6" }}>
+              Zonnestelsel
             </p>
             <h1
               className="text-display mb-5 leading-[0.95]"
@@ -158,16 +169,7 @@ export default function AtlasView({
                 color: "#F5F0E6",
               }}
             >
-              Vind jouw{" "}
-              <span
-                className="italic font-light"
-                style={{
-                  fontVariationSettings: '"SOFT" 100, "WONK" 1, "opsz" 144',
-                }}
-              >
-                pad
-              </span>
-              <span style={{ color: "#E4B866" }}>.</span>
+              Vind jouw pad<span style={{ color: "#00A6D6" }}>.</span>
             </h1>
             <p
               className="text-sm leading-relaxed mb-6"
@@ -179,50 +181,73 @@ export default function AtlasView({
             </p>
 
             <div className="space-y-2">
-              <p className="text-label mb-2" style={{ color: "#E4B866" }}>
+              <p className="text-label mb-2" style={{ color: "#00A6D6" }}>
                 Volg een reis
               </p>
               {JOURNEYS.map((j) => (
-                <button
-                  key={j.id}
-                  onClick={() => setActiveJourney(j)}
-                  className="group w-full text-left p-3 rounded-lg transition-colors"
-                  style={{
-                    color: "#F5F0E6",
-                    backgroundColor: "rgba(245, 240, 230, 0.04)",
-                    border: "1px solid rgba(245, 240, 230, 0.08)",
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.backgroundColor =
-                      "rgba(228, 184, 102, 0.12)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.backgroundColor =
-                      "rgba(245, 240, 230, 0.04)")
-                  }
-                >
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <span className="font-display text-sm leading-tight">
-                      {j.title}
-                    </span>
-                    <Play
-                      size={11}
-                      className="mt-0.5 shrink-0 transition-transform group-hover:scale-110"
-                      style={{ color: "#E4B866" }}
-                    />
-                  </div>
-                  <div
-                    className="text-[10px] numerals tracking-wider"
-                    style={{ color: "#F5F0E6", opacity: 0.55 }}
-                  >
-                    {j.subtitle}
-                  </div>
-                </button>
+                <JourneyButton key={j.id} j={j} onStart={() => setActiveJourney(j)} />
               ))}
             </div>
           </div>
 
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+          {/* MOBILE: bottom sheet, collapsible */}
+          <div
+            className="md:hidden absolute left-0 right-0 bottom-0 z-10 pointer-events-auto"
+          >
+            <button
+              type="button"
+              onClick={() => setSheetExpanded((v) => !v)}
+              className="w-full flex items-center justify-between px-5 py-3 backdrop-blur-md"
+              style={{
+                backgroundColor: "rgba(10, 7, 4, 0.82)",
+                borderTop: "1px solid rgba(245, 240, 230, 0.12)",
+              }}
+              aria-expanded={sheetExpanded}
+              aria-label={sheetExpanded ? "Paneel sluiten" : "Paneel openen"}
+            >
+              <div className="flex items-center gap-2">
+                <Compass size={14} style={{ color: "#00A6D6" }} />
+                <span className="text-label" style={{ color: "#F5F0E6" }}>
+                  {sheetExpanded ? "Sluiten" : "Volg een reis"}
+                </span>
+              </div>
+              <ChevronIcon open={sheetExpanded} />
+            </button>
+
+            <div
+              className="overflow-hidden transition-[max-height] duration-300 ease-out backdrop-blur-md"
+              style={{
+                maxHeight: sheetExpanded ? "55vh" : "0",
+                backgroundColor: "rgba(10, 7, 4, 0.82)",
+                overflowY: sheetExpanded ? "auto" : "hidden",
+              }}
+            >
+              <div className="px-5 pt-2 pb-6">
+                <p
+                  className="text-sm leading-relaxed mb-5"
+                  style={{ color: "#F5F0E6", opacity: 0.82 }}
+                >
+                  Vier banen, vier niveaus. Begin bij <strong>Niveau I</strong>{" "}
+                  en werk je naar buiten.
+                </p>
+                <div className="space-y-2">
+                  {JOURNEYS.map((j) => (
+                    <JourneyButton
+                      key={j.id}
+                      j={j}
+                      onStart={() => {
+                        setActiveJourney(j);
+                        setSheetExpanded(false);
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Hint — desktop only, tap-on-mobile is obvious */}
+          <div className="hidden md:block absolute bottom-8 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
             <p
               className="text-label text-center px-4 py-2 rounded-full backdrop-blur-sm"
               style={{
@@ -238,10 +263,10 @@ export default function AtlasView({
         </>
       )}
 
-      {/* ─── LEGEND (visible when fully idle) ────────── */}
+      {/* ─── LEGEND (visible when fully idle, desktop only) ────── */}
       {!selectedId && !activeJourney && (
         <div
-          className="absolute bottom-8 right-6 md:right-10 z-10 pointer-events-none p-5 rounded-xl backdrop-blur-sm max-w-[240px]"
+          className="hidden md:block absolute bottom-8 right-10 z-10 pointer-events-none p-5 rounded-xl backdrop-blur-sm max-w-[240px]"
           style={{
             backgroundColor: "rgba(10, 7, 4, 0.55)",
             border: "1px solid rgba(245, 240, 230, 0.08)",
@@ -290,10 +315,11 @@ export default function AtlasView({
       {/* ─── TOUR PROGRESS STRIP ─────────────────────── */}
       {activeJourney && (
         <div
-          className="absolute top-24 left-1/2 -translate-x-1/2 z-20 pointer-events-auto p-4 rounded-2xl backdrop-blur-md"
+          className="absolute top-20 md:top-24 left-3 right-3 md:left-1/2 md:right-auto md:-translate-x-1/2 z-20 pointer-events-auto p-3 md:p-4 rounded-2xl backdrop-blur-md"
           style={{
-            backgroundColor: "rgba(10, 7, 4, 0.75)",
-            border: "1px solid rgba(228, 184, 102, 0.3)",
+            backgroundColor: "rgba(10, 7, 4, 0.82)",
+            border: "1px solid rgba(0, 166, 214, 0.35)",
+            maxWidth: "calc(100vw - 1.5rem)",
             minWidth: "min(90vw, 520px)",
           }}
         >
@@ -394,11 +420,64 @@ export default function AtlasView({
         selectedId={selectedId}
       />
 
-      {/* ─── SELECTION PANEL — anchored top-left, same as intro ─── */}
+      {/* ─── SELECTION PANEL — top-left card on desktop, bottom sheet on mobile ── */}
       {selected && (
-        <div className="absolute top-24 left-6 md:left-10 z-20 max-w-md w-[min(92vw,420px)] animate-fade-up">
+        <div
+          className={`
+            absolute z-20 animate-fade-up
+            md:top-24 md:left-10 md:max-w-md md:w-[min(92vw,420px)]
+            left-0 right-0 bottom-0 md:bottom-auto md:right-auto
+          `}
+        >
+          {/* Mobile handle — tap to collapse back to a thin bar */}
+          <button
+            type="button"
+            onClick={() => setSheetExpanded((v) => !v)}
+            className="md:hidden w-full flex items-center justify-between px-5 py-3 backdrop-blur-md"
+            style={{
+              backgroundColor: "rgba(10, 7, 4, 0.82)",
+              borderTop: "1px solid rgba(245, 240, 230, 0.12)",
+            }}
+            aria-expanded={sheetExpanded}
+            aria-label={sheetExpanded ? "Details sluiten" : "Details tonen"}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <span
+                className="w-2 h-2 rounded-full shrink-0"
+                style={{ background: selected.glowColor ?? selected.color }}
+              />
+              <span
+                className="font-display text-sm truncate"
+                style={{ color: "#F5F0E6" }}
+              >
+                {selected.label}
+              </span>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <ChevronIcon open={sheetExpanded} />
+              <span
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedId(null);
+                }}
+                role="button"
+                aria-label="Selectie wissen"
+                className="w-7 h-7 inline-flex items-center justify-center rounded-full"
+                style={{ border: "1px solid rgba(245, 240, 230, 0.2)", color: "#F5F0E6" }}
+              >
+                <X size={12} />
+              </span>
+            </div>
+          </button>
+
           <div
-            className="bg-paper text-ink rounded-xl p-6 md:p-7 shadow-2xl max-h-[calc(100vh-8rem)] overflow-y-auto"
+            className={`
+              bg-paper text-ink overflow-y-auto
+              md:rounded-xl md:shadow-2xl md:p-7 md:max-h-[calc(100vh-8rem)]
+              px-5 py-5 transition-[max-height] duration-300 ease-out
+              ${sheetExpanded ? "max-h-[70vh]" : "max-h-0 py-0"}
+              md:max-h-[calc(100vh-8rem)] md:py-7
+            `}
             style={{ boxShadow: "0 30px 60px -15px rgba(0,0,0,0.6)" }}
           >
             {/* Breadcrumb */}
@@ -794,4 +873,65 @@ function kindLabel(kind: string): string {
 
 function romanLevel(n: number): string {
   return ["", "I", "II", "III", "IV"][n] ?? String(n);
+}
+
+/* ─── SHARED BUTTONS ──────────────────────────────── */
+
+function JourneyButton({
+  j,
+  onStart,
+}: {
+  j: JourneyPath;
+  onStart: () => void;
+}) {
+  return (
+    <button
+      onClick={onStart}
+      className="group w-full text-left p-3 rounded-lg transition-colors"
+      style={{
+        color: "#F5F0E6",
+        backgroundColor: "rgba(245, 240, 230, 0.04)",
+        border: "1px solid rgba(245, 240, 230, 0.08)",
+      }}
+      onMouseEnter={(e) =>
+        (e.currentTarget.style.backgroundColor = "rgba(0, 166, 214, 0.18)")
+      }
+      onMouseLeave={(e) =>
+        (e.currentTarget.style.backgroundColor = "rgba(245, 240, 230, 0.04)")
+      }
+    >
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <span className="font-display text-sm leading-tight">{j.title}</span>
+        <Play
+          size={11}
+          className="mt-0.5 shrink-0 transition-transform group-hover:scale-110"
+          style={{ color: "#00A6D6" }}
+        />
+      </div>
+      <div
+        className="text-[10px] numerals tracking-wider"
+        style={{ color: "#F5F0E6", opacity: 0.55 }}
+      >
+        {j.subtitle}
+      </div>
+    </button>
+  );
+}
+
+function ChevronIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+      style={{ color: "#F5F0E6" }}
+      aria-hidden
+    >
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
 }
