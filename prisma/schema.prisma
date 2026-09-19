@@ -278,3 +278,35 @@ model BadgeEarned {
 
   @@unique([badgeId, studentId])
 }
+
+// ─── VELDBOOM LAUNCHER TELEMETRY ─────────────────────
+// Anonymous, consent-gated usage events from the desktop launcher (v1.8.0+).
+// installId is a random UUID minted client-side on consent — never a GitHub
+// identity. No IP addresses are stored; country comes from Vercel's geo header.
+
+model LauncherEvent {
+  id        String   @id @default(cuid())
+  installId String
+  event     String   // launcher_started | install_started | install_completed | install_failed | game_launched | game_closed | dlc_downloaded | file_downloaded
+  gameId    String?
+  version   String?  // launcher version
+  gameVersion String?
+  sessionMs Int?     // for game_closed
+  country   String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([event, createdAt])
+  @@index([installId])
+}
+
+model LauncherFeedback {
+  id        String   @id @default(cuid())
+  installId String?
+  message   String
+  contact   String?  // optional, user-provided
+  gameId    String?
+  version   String?
+  country   String?
+  createdAt DateTime @default(now())
+}
